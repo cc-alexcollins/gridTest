@@ -310,7 +310,7 @@ function addGroupNodesFromNodes(currLevel, prevNodes, numToAdd, nodesLeft) {
     );
     let xMax = Math.min(
       width - nodesLeft - 1,
-      Math.min.apply(null, prevNodes.map(n => n.x)) + 1
+      Math.min.apply(null, prevNodes.map(n => n.x)) + 1 + i
     );
 
     // If there's only one node left, we need extra logic to ensure that
