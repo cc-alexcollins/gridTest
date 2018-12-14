@@ -77,7 +77,7 @@ console.log('----------');
 const interval = 200;
 const seconds = height;
 
-let timer = new Timer(interval);
+let timer = new Timer({ interval: interval });
 timer.on('tick', tick);
 timer.on('statusChanged', status => console.log('Timer Status:', status));
 timer.start(seconds * interval);
