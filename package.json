@@ -1,0 +1,18 @@
+{
+  "name": "gridtest",
+  "version": "1.0.0",
+  "description": "test",
+  "main": "index.js",
+  "scripts": {
+    "test": "node index.js"
+  },
+  "author": "Alex",
+  "license": "ISC",
+  "dependencies": {
+    "seedrandom": "^2.4.4",
+    "tiny-timer": "^1.3.0"
+  },
+  "devDependencies": {
+    "prettier": "^1.15.3"
+  }
+}
