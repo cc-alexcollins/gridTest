@@ -1,3 +1,15 @@
+/**
+ * @module Random
+ *
+ * @description Helper class for generating random numbers
+ */
+
+/**
+ * @constant randSeed
+ *
+ * @description The seed used for all random number generation
+ * @see [Constants.randSeed](#module_Constants..randSeed)
+ */
 const randSeed = require('./constants').randSeed;
 const rand = require('seedrandom')(randSeed);
 
