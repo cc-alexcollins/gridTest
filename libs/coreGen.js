@@ -16,6 +16,7 @@
  * The group identifier for the node relative to the previous level
  * @property {array} next
  * The branches that this node provides to the next level of nodes
+ * `-1` means up and left, `0` means straight up, and `1` means up and right
  */
 const Node = {
   x: 0,
@@ -31,7 +32,11 @@ const Node = {
  * @description An single row in a grid of nodes. Cells without nodes are
  * marked as `null`.
  */
-const Level = [];
+const Level = {
+  level: 0,
+  special: '',
+  nodes: []
+};
 
 /**
  * Creates an empty level (row) for the grid. Each index represents an
@@ -41,12 +46,16 @@ const Level = [];
  *
  * @returns {module:CoreGen~Level} A new level with every element set to `null`
  */
-function createLevel(width) {
-  const level = [];
+function createLevel(width, y) {
+  let nodes = [];
   for (let i = 0; i < width; i++) {
-    level.push(null);
+    nodes.push(null);
   }
-  return level;
+  return {
+    level: y,
+    special: '',
+    nodes: nodes
+  };
 }
 
 /**

@@ -14,6 +14,16 @@ var y = 0;
 
 // Algorithm Methods
 
+/**
+ * Starts generation for a grid of nodes.
+ *
+ * Creates the first level randomly, then assigns random groups based on the
+ * positions of the nodes in the level.
+ *
+ * @param {module:AlgorithmWrapper~GenOptions} options
+ * The width, height, and other options to use when generating the grid
+ * @param {module:CoreGen~Level[]} grid The grid object to generate into
+ */
 exports.start = function(options, grid) {
   width = options.width;
   height = options.height;
@@ -28,10 +38,10 @@ exports.start = function(options, grid) {
   let startX = Random.getRandomInt(0, 2);
   y = 0;
 
-  let startLevel = CoreGen.createLevel(width);
+  let startLevel = CoreGen.createLevel(width, y);
   for (let i = 0; i < startingNodes && startX < width; i++) {
     let node = CoreGen.createNode(startX, y, Constants.elements[i]);
-    startLevel[node.x] = node;
+    startLevel.nodes[node.x] = node;
 
     startX += Random.getRandomInt(1, 2);
   }
@@ -41,9 +51,23 @@ exports.start = function(options, grid) {
   grid.push(startLevel);
 };
 
+/**
+ * Generates the next level for a grid of nodes.
+ *
+ * Basic algorithm
+ * 1. Gather the nodes from the previous level by their group
+ * 2. Calculate how many nodes each group should get on the next level
+ *     - Takes into account the positions of groups
+ * 3. For each group, add the new nodes calculated in the last step
+ * 4. Connect each node in the previous level to the nodes in new level,
+ * as long as they are in the same group
+ * 5. At specified breakpoints, reset the groups to cause paths to merge
+ *
+ * @param {module:CoreGen~Level[]} grid The grid object to generate into
+ */
 exports.next = function(grid) {
-  grid.push(CoreGen.createLevel(width));
-  y = grid.length - 1;
+  y++;
+  grid.push(CoreGen.createLevel(width, y));
 
   generateNodesOnGrid(grid);
 };
@@ -56,7 +80,7 @@ function generateNodesOnGrid(grid) {
   let groups = [];
   for (let i = 0; i < Constants.maxNodeGroups; i++) {
     let groupId = i + 1;
-    let groupNodes = prevLevel.reduce((gn, node) => {
+    let groupNodes = prevLevel.nodes.reduce((gn, node) => {
       if (node && node.group === groupId) {
         gn.push(node);
       }
@@ -118,7 +142,7 @@ function generateNodesOnGrid(grid) {
   groups.forEach(groupInfo => {
     let groupNodeCount = groupInfo.count;
     total -= groupNodeCount;
-    addGroupNodesFromNodes(currLevel, groupInfo, total);
+    addGroupNodesFromNodes(groupInfo, currLevel.nodes, total);
   });
 
   // Reset groups if necessary
@@ -127,6 +151,7 @@ function generateNodesOnGrid(grid) {
     if (resetHeights[0] === 0) {
       resetHeights.shift();
       generateGroups(currLevel);
+      currLevel.special = 'reset';
     }
   }
 }
@@ -135,11 +160,11 @@ function generateNodesOnGrid(grid) {
 
 function generateGroups(level) {
   console.log('generating groups for level: ');
-  console.log(level);
+  console.log(level.nodes);
 
   let possibleGroups = Constants.allowedGroupVariations.reduce(
     (groups, check) => {
-      if (nodesFitInGrouping(check, level)) {
+      if (nodesFitInGrouping(check, level.nodes)) {
         groups.push(check);
       }
       return groups;
@@ -157,13 +182,13 @@ function generateGroups(level) {
   let group = Random.getRandomElement(possibleGroups);
 
   // Run this one more time to lock in the group ids
-  nodesFitInGrouping(group, level);
+  nodesFitInGrouping(group, level.nodes);
 
   console.log('selected group', group);
-  console.log(level);
+  console.log(level.nodes);
 }
 
-function nodesFitInGrouping(group, level) {
+function nodesFitInGrouping(group, levelNodes) {
   let x = 0;
   let fits = true;
   let groupId = 0;
@@ -174,15 +199,14 @@ function nodesFitInGrouping(group, level) {
 
     let maxGroupSeperation = inGroup + 1;
     for (let j = 0; j < maxGroupSeperation && x < width; j++) {
-      let node = level[x++];
-      // console.log(group, i, groupId, '|', node ? node.element : ' ', j, found);
+      let node = levelNodes[x++];
       if (node) {
         node.group = groupId + 1;
         node.element = Constants.elements[found];
         found++;
         if (found === inGroup) {
           fits = true;
-          break;
+          break; // Start checking the next group immediately
         }
       } else if (found === 0) {
         // Ignore empty nodes until we find the first one
@@ -192,13 +216,17 @@ function nodesFitInGrouping(group, level) {
 
     groupId++;
 
+    // If it already doesn't fit the grouping, just break out now
     if (!fits) {
       break;
     }
   }
 
+  // Make sure that every node in the level was accounted for by the grouping.
+  // If there are still nodes left unchecked from the loop above, then the
+  // current nodes being checked *do not* fit the grouping.
   while (fits && x < width) {
-    let node = level[x++];
+    let node = levelNodes[x++]; // Should be null from x --> width
     if (node) {
       fits = false;
     }
@@ -207,7 +235,7 @@ function nodesFitInGrouping(group, level) {
   return fits;
 }
 
-function addGroupNodesFromNodes(currLevel, group, nodesLeft) {
+function addGroupNodesFromNodes(group, currLevelNodes, nodesLeft) {
   const skipWeight = [1, 1, 1, 1, 2];
   console.log('----------');
 
@@ -229,7 +257,7 @@ function addGroupNodesFromNodes(currLevel, group, nodesLeft) {
 
   let addedNodes = [];
   for (let i = 0; i < maxNodes; i++) {
-    let prevX = Math.max.apply(null, currLevel.map(n => (n ? n.x : -1)));
+    let prevX = Math.max.apply(null, currLevelNodes.map(n => (n ? n.x : -1)));
     let xMin = Math.max(
       0,
       prevX + Random.getRandomElement(skipWeight),
@@ -271,7 +299,7 @@ function addGroupNodesFromNodes(currLevel, group, nodesLeft) {
 
     let node = CoreGen.createNode(x, y, Constants.elements[i]);
     node.group = groupId;
-    currLevel[node.x] = node;
+    currLevelNodes[node.x] = node;
     addedNodes.push(node);
   }
   console.log(addedNodes);

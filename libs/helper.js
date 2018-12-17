@@ -28,7 +28,7 @@ function printGrid(gridToPrint, printGrid) {
     // Print connections
     if (gridToPrint[i + 1]) {
       let connString = '';
-      level.forEach(node => {
+      level.nodes.forEach(node => {
         if (!node) {
           connString += '      ';
           return;
@@ -61,8 +61,7 @@ function printGrid(gridToPrint, printGrid) {
 
     // Print this level
     let levelString = '';
-    for (let i = 0; i < level.length; i++) {
-      let node = level[i];
+    level.nodes.forEach(node => {
       levelString += printGrid ? '| ' : '  ';
       if (node) {
         levelString += nodeText(node.group, node.element);
@@ -70,9 +69,12 @@ function printGrid(gridToPrint, printGrid) {
         levelString += printGrid ? ' - ' : '   ';
       }
       levelString += ' ';
-    }
+    });
     levelString += printGrid ? '|' : ' ';
-    levelString += ' ' + i;
+    levelString += ' ' + level.level;
+    if (level.special !== '') {
+      levelString += ' | ' + level.special;
+    }
     console.log(levelString);
   }
 }
