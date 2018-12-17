@@ -26,6 +26,63 @@
 ## AlgorithmWrapper
 Contains a wrapper for the various grid generator algorithms
 
+
+* [AlgorithmWrapper](#module_AlgorithmWrapper)
+    * _static_
+        * [.setGenAlgorithm(algorithm)](#module_AlgorithmWrapper.setGenAlgorithm)
+        * [.genStart(options, grid)](#module_AlgorithmWrapper.genStart)
+        * [.genNext(grid)](#module_AlgorithmWrapper.genNext)
+    * _inner_
+        * [~GenAlgorithms](#module_AlgorithmWrapper..GenAlgorithms)
+        * [~GenOptions](#module_AlgorithmWrapper..GenOptions)
+
+<a name="module_AlgorithmWrapper.setGenAlgorithm"></a>
+
+### AlgorithmWrapper.setGenAlgorithm(algorithm)
+Sets the grid generation algorithm
+
+**Kind**: static method of [<code>AlgorithmWrapper</code>](#module_AlgorithmWrapper)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| algorithm | [<code>GenAlgorithms</code>](#module_AlgorithmWrapper..GenAlgorithms) | The algorithm to use for generation |
+
+<a name="module_AlgorithmWrapper.genStart"></a>
+
+### AlgorithmWrapper.genStart(options, grid)
+Starts grid generation by setting up the base set of levels based on the
+current algorithm
+
+**Kind**: static method of [<code>AlgorithmWrapper</code>](#module_AlgorithmWrapper)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| options | [<code>GenOptions</code>](#module_AlgorithmWrapper..GenOptions) | The options to use during generation |
+| grid | [<code>Array.&lt;Level&gt;</code>](#module_CoreGen..Level) | The grid object to generate into |
+
+<a name="module_AlgorithmWrapper.genNext"></a>
+
+### AlgorithmWrapper.genNext(grid)
+Generates the next level of the grid using the current generation algorithm
+
+**Kind**: static method of [<code>AlgorithmWrapper</code>](#module_AlgorithmWrapper)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| grid | [<code>Array.&lt;Level&gt;</code>](#module_CoreGen..Level) | The grid object to generate into |
+
+<a name="module_AlgorithmWrapper..GenAlgorithms"></a>
+
+### AlgorithmWrapper~GenAlgorithms
+All of the available algorithms for grid generation
+
+**Kind**: inner constant of [<code>AlgorithmWrapper</code>](#module_AlgorithmWrapper)  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| group | [<code>GroupGen</code>](#module_GroupGen) | Group generation algorithm |
+
 <a name="module_AlgorithmWrapper..GenOptions"></a>
 
 ### AlgorithmWrapper~GenOptions

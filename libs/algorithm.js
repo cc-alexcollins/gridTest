@@ -4,13 +4,7 @@
  * @description Contains a wrapper for the various grid generator algorithms
  */
 
-exports.GEN_ALGORITHMS = {
-  group: 'group'
-};
-
-const GEN_ALGORITHM_MODULES = {
-  [exports.GEN_ALGORITHMS.group]: require('./gen-algorithms/group/groupGen')
-};
+// Generation Options
 
 /**
  * @typedef GenOptions
@@ -32,17 +26,58 @@ exports.GEN_OPTIONS = {
   resetHeights: [7, 6]
 };
 
+/**
+ * @constant GenAlgorithms
+ *
+ * @description All of the available algorithms for grid generation
+ *
+ * @property {module:GroupGen} group Group generation algorithm
+ */
+exports.GEN_ALGORITHMS = {
+  group: 'group'
+};
+
+const GEN_ALGORITHM_MODULES = {
+  [exports.GEN_ALGORITHMS.group]: require('./gen-algorithms/group/groupGen')
+};
+
+// Algorithm Execution
+
+// Default is the first element in `GEN_ALGORITHMS`
 var currentAlgorithm =
   exports.GEN_ALGORITHMS[Object.keys(exports.GEN_ALGORITHMS)[0]];
 
+/**
+ * Sets the grid generation algorithm
+ *
+ * @param {module:AlgorithmWrapper~GenAlgorithms} algorithm
+ * The algorithm to use for generation
+ */
 exports.setGenAlgorithm = function(algorithm) {
   currentAlgorithm = algorithm;
+
+  if (!GEN_ALGORITHM_MODULES[currentAlgorithm]) {
+    console.error('Invalid generation algorithm specified!', algorithm);
+  }
 };
 
+/**
+ * Starts grid generation by setting up the base set of levels based on the
+ * current algorithm
+ *
+ * @param {module:AlgorithmWrapper~GenOptions} options
+ * The options to use during generation
+ * @param {module:CoreGen~Level[]} grid The grid object to generate into
+ */
 exports.genStart = function(options, grid) {
-  return GEN_ALGORITHM_MODULES[currentAlgorithm].start(options, grid);
+  GEN_ALGORITHM_MODULES[currentAlgorithm].start(options, grid);
 };
 
+/**
+ * Generates the next level of the grid using the current generation algorithm
+ *
+ * @param {module:CoreGen~Level[]} grid The grid object to generate into
+ */
 exports.genNext = function(grid) {
-  return GEN_ALGORITHM_MODULES[currentAlgorithm].next(grid);
+  GEN_ALGORITHM_MODULES[currentAlgorithm].next(grid);
 };
