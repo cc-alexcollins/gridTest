@@ -1,11 +1,15 @@
-/** @module GroupGen */
+/**
+ * @module GroupGen
+ *
+ * @description Group-based node generation
+ */
 
 const CoreGen = require('../../coreGen');
 const Constants = require('../../constants');
 const Random = require('../../random');
 const Helper = require('../../helper');
 
-// Constants
+// Constants -- overriden in `start`
 var width = 7;
 var height = 25;
 var resetHeights = [7, 6];
@@ -72,6 +76,126 @@ exports.next = function(grid) {
   generateNodesOnGrid(grid);
 };
 
+// Grouping Methods
+
+/**
+ * Calculates and assigns groups for the nodes in the specified level
+ *
+ * @param {CoreGen~Level} level The level to assign groups to
+ */
+function generateGroups(level) {
+  console.log('generating groups for level: ');
+  console.log(level.nodes);
+
+  let possibleGroups = Constants.allowedGroupVariations.reduce(
+    (groups, check) => {
+      if (nodesFitInGrouping(check, level.nodes)) {
+        groups.push(check);
+      }
+      return groups;
+    },
+    []
+  );
+
+  if (possibleGroups.length === 0) {
+    console.error('no groups!');
+    possibleGroups = [Constants.allowedGroupVariations[0]];
+  }
+
+  console.log('possible groups');
+  console.log(possibleGroups);
+  let group = Random.getRandomElement(possibleGroups);
+
+  // Run this one more time to lock in the group ids
+  nodesFitInGrouping(group, level.nodes);
+
+  console.log('selected group', group);
+  console.log(level.nodes);
+}
+
+/**
+ * Checks if the specified nodes fit in a grouping
+ *
+ * @param {int[]} group A grouping definition -- see
+ * {module:Constants~allowedGroupVariations}
+ * @param {type} levelNodes The nodes to try and fit in the grouping
+ *
+ * @returns {boolean} Whether the nodes fit or not
+ */
+function nodesFitInGrouping(group, levelNodes) {
+  let x = 0;
+  let fits = true;
+  let groupId = 0;
+  for (let i = 0; i < group.length; i++) {
+    let inGroup = group[i];
+    let found = 0;
+    fits = false;
+
+    let maxGroupSeperation = inGroup + 1;
+    for (let j = 0; j < maxGroupSeperation && x < width; j++) {
+      let node = levelNodes[x++];
+      if (node) {
+        node.groupId = groupId + 1;
+        node.element = Constants.elements[found];
+        found++;
+        if (found === inGroup) {
+          fits = true;
+          break; // Start checking the next group immediately
+        }
+      } else if (found === 0) {
+        // Ignore empty nodes until we find the first one
+        j--;
+      }
+    }
+
+    groupId++;
+
+    // If it already doesn't fit the grouping, just break out now
+    if (!fits) {
+      break;
+    }
+  }
+
+  // Make sure that every node in the level was accounted for by the grouping.
+  // If there are still nodes left unchecked from the loop above, then the
+  // current nodes being checked *do not* fit the grouping.
+  while (fits && x < width) {
+    let node = levelNodes[x++]; // Should be null from x --> width
+    if (node) {
+      fits = false;
+    }
+  }
+
+  return fits;
+}
+
+// Generation Methods
+
+/**
+ * @typedef Group
+ *
+ * @description A group for nodes at a given level to fit into
+ *
+ * @property {int} groupId The id of the group
+ * @property {module:CoreGen~Node[]} prevNodes
+ * The nodes for this group in the previous level of the grid
+ * @property {int} minAdded
+ * The minimum number of nodes that are needed in this group so that all nodes
+ * from the previous level of the group can have at least 1 connection
+ * @property {int} count The maximum number of nodes this group will try to have
+ */
+const GROUP = {
+  groupId: 0,
+  prevNodes: [],
+  minAdded: 0,
+  count: 0 // Calculated below
+};
+
+/**
+ * Performs the node generation for the next level
+ *
+ * @param {module:CoreGen~Level[]} grid The grid object to generate into
+ */
 function generateNodesOnGrid(grid) {
   let currLevel = grid[y];
   let prevLevel = grid[y - 1];
@@ -81,7 +205,7 @@ function generateNodesOnGrid(grid) {
   for (let i = 0; i < Constants.maxNodeGroups; i++) {
     let groupId = i + 1;
     let groupNodes = prevLevel.nodes.reduce((gn, node) => {
-      if (node && node.group === groupId) {
+      if (node && node.groupId === groupId) {
         gn.push(node);
       }
       return gn;
@@ -90,7 +214,7 @@ function generateNodesOnGrid(grid) {
     if (groupNodes.length > 0) {
       let separation = groupNodes[groupNodes.length - 1].x - groupNodes[0].x;
       groups.push({
-        group: groupId,
+        groupId: groupId,
         prevNodes: groupNodes,
         minAdded: Math.max(separation - 1, 1),
         count: 0 // Calculated below
@@ -142,7 +266,7 @@ function generateNodesOnGrid(grid) {
   groups.forEach(groupInfo => {
     let groupNodeCount = groupInfo.count;
     total -= groupNodeCount;
-    addGroupNodesFromNodes(groupInfo, currLevel.nodes, total);
+    addNodesForGroupToLevel(groupInfo, currLevel, total);
   });
 
   // Reset groups if necessary
@@ -156,93 +280,23 @@ function generateNodesOnGrid(grid) {
   }
 }
 
-// Generation Methods
-
-function generateGroups(level) {
-  console.log('generating groups for level: ');
-  console.log(level.nodes);
-
-  let possibleGroups = Constants.allowedGroupVariations.reduce(
-    (groups, check) => {
-      if (nodesFitInGrouping(check, level.nodes)) {
-        groups.push(check);
-      }
-      return groups;
-    },
-    []
-  );
-
-  if (possibleGroups.length === 0) {
-    console.error('no groups!');
-    possibleGroups = [Constants.allowedGroupVariations[0]];
-  }
-
-  console.log('possible groups');
-  console.log(possibleGroups);
-  let group = Random.getRandomElement(possibleGroups);
-
-  // Run this one more time to lock in the group ids
-  nodesFitInGrouping(group, level.nodes);
-
-  console.log('selected group', group);
-  console.log(level.nodes);
-}
-
-function nodesFitInGrouping(group, levelNodes) {
-  let x = 0;
-  let fits = true;
-  let groupId = 0;
-  for (let i = 0; i < group.length; i++) {
-    let inGroup = group[i];
-    let found = 0;
-    fits = false;
-
-    let maxGroupSeperation = inGroup + 1;
-    for (let j = 0; j < maxGroupSeperation && x < width; j++) {
-      let node = levelNodes[x++];
-      if (node) {
-        node.group = groupId + 1;
-        node.element = Constants.elements[found];
-        found++;
-        if (found === inGroup) {
-          fits = true;
-          break; // Start checking the next group immediately
-        }
-      } else if (found === 0) {
-        // Ignore empty nodes until we find the first one
-        j--;
-      }
-    }
-
-    groupId++;
-
-    // If it already doesn't fit the grouping, just break out now
-    if (!fits) {
-      break;
-    }
-  }
-
-  // Make sure that every node in the level was accounted for by the grouping.
-  // If there are still nodes left unchecked from the loop above, then the
-  // current nodes being checked *do not* fit the grouping.
-  while (fits && x < width) {
-    let node = levelNodes[x++]; // Should be null from x --> width
-    if (node) {
-      fits = false;
-    }
-  }
-
-  return fits;
-}
-
-function addGroupNodesFromNodes(group, currLevelNodes, nodesLeft) {
+/**
+ * Creates and adds nodes for the specified group to the specified level
+ *
+ * @param {module:GroupGen~Group} group The group to generate nodes for
+ * @param {module:CoreGen~Level} currLevel The level to add the nodes to
+ * @param {int} nodesLeft
+ * How much space needs to be left for the remaining groups that are yet to be
+ * generated. Clamps the max node spread for the group.
+ */
+function addNodesForGroupToLevel(group, currLevel, nodesLeft) {
   const skipWeight = [1, 1, 1, 1, 2];
   console.log('----------');
 
   let prevNodes = group.prevNodes;
   let minNodes = group.minAdded;
   let maxNodes = group.count;
-  let groupId = prevNodes[0].group;
+  let groupId = prevNodes[0].groupId;
 
   console.log(
     'add nodes',
@@ -257,7 +311,7 @@ function addGroupNodesFromNodes(group, currLevelNodes, nodesLeft) {
 
   let addedNodes = [];
   for (let i = 0; i < maxNodes; i++) {
-    let prevX = Math.max.apply(null, currLevelNodes.map(n => (n ? n.x : -1)));
+    let prevX = Math.max.apply(null, currLevel.nodes.map(n => (n ? n.x : -1)));
     let xMin = Math.max(
       0,
       prevX + Random.getRandomElement(skipWeight),
@@ -298,8 +352,8 @@ function addGroupNodesFromNodes(group, currLevelNodes, nodesLeft) {
     console.log(xMin, xMax, leftLeaning, '|', x);
 
     let node = CoreGen.createNode(x, y, Constants.elements[i]);
-    node.group = groupId;
-    currLevelNodes[node.x] = node;
+    node.groupId = groupId;
+    currLevel.nodes[node.x] = node;
     addedNodes.push(node);
   }
   console.log(addedNodes);
@@ -310,36 +364,59 @@ function addGroupNodesFromNodes(group, currLevelNodes, nodesLeft) {
   console.log('possible connections');
   console.log(possibleConnections);
   let connections = Random.getRandomElement(possibleConnections);
-  validateNodeConnections(connections, prevNodes, null); // No need to validate
+  // No need to validate -- just do the set
+  validateNodeConnections(connections, prevNodes, null);
 }
 
-/*
-// what I can get
-[ // all nodes
-  [ // prev node 0
-    // possible connections for node 0
-    [0], [0, 1], [1]
-  ],
-  [ // prev node 1
-    // possible connections for node 1
-    [-1]
-  ]
-]
-
-// what I need
+/**
+ * Calculates all the various ways that the nodes in `prevNodes` can be
+ * connected to the nodes in `addedNodes`.
+ *
+ * From inner to outer, the result contains these values:
+ * * The integers are connections between two nodes
+ * * The integer arrays are the connections for a given node
+ * * The array of integer arrays is the connections for all the nodes in a set
+ * * The array that holds that is all of the permutations of connection sets
+ *
+ * It ends up looking like this:
+```
 [ // all connections
-  [ // node-connection arrays
-    [1, 0], // node index 0
-    [-1, 0] // node index 1
-  ],
-  [
-    [0],
-    [0]
-  ],
+ [ // node-connection arrays
+   [0, 1], // node index 0 connects to straight and right
+   [-1, 0] // node index 1 connects to left and straight
+ ],
+ [
+   [0], // node index 0 connects to straight ahead
+   [1]  // node index 1 connects to the right
+ ],
+ [
+   // ... more connections
+ ]
 ]
-
+```
+ *
+ * @param {type} prevNodes  Description
+ * @param {type} addedNodes Description
+ *
+ * @returns {Array.< Array.< Array.< int > > >}
+ * A 3-deep array -- array of array of integer arrays
  */
 function getAllConnections(prevNodes, addedNodes) {
+  /*
+  // This first step converts all nodes into an array of their
+  // possible connections to other nodes
+  [ // all nodes
+    [ // prev node 0
+      // possible connections for node 0
+      [0], [0, 1], [1]
+    ],
+    [ // prev node 1
+      // possible connections for node 1
+      [-1]
+    ]
+  ]
+   */
+
   let connections = [];
   // Get all connection possibilities for each node
   for (let i = 0; i < prevNodes.length; i++) {
@@ -355,10 +432,11 @@ function getAllConnections(prevNodes, addedNodes) {
     console.log('node connections | node', i);
     console.log(nodeConnections);
 
-    connections.push(expandConnections(nodeConnections, []));
+    connections.push(Helper.arrayPermutations(nodeConnections, []));
   }
 
-  // Trim connection possibilities by validating all permutations
+  // Trim connection possibilities by validating all permutations and
+  // removing ones that fail
   console.log('all node connectivity');
   console.log(connections);
 
@@ -373,37 +451,27 @@ function getAllConnections(prevNodes, addedNodes) {
   return connectionPossibilities;
 }
 
-/* takes in an array, returns an array of arrays
-[1, 0] -->
-  [
-    [1, 0], [1], [0]
-  ]
-
+/**
+ * Returns the subset of node connectivity that properly connect all nodes
+ * in the `fromNodes` set to those in the `toNodes` set.
+ *
+ * The input is an array of node connections. The output is an array of
+ * connectivity possibilities.
+ *
+ * @param {Array.< Array.< Array.< int > > >} connections
+ * All of the possible connections for each node in `toNodes`
+ * @param {Array.< int >} set
+ * The current set of connections that is being checked
+ * @param {module:CoreGen~Node[]} fromNodes
+ * The nodes being connected. Each of these *must* connect to at least one
+ * node in the `toNodes`.
+ * @param {module:CoreGen~Node[]} toNodes The nodes being connected to
+ * @param {string[]} validated The connectivity sets that have already been
+ * validated, used for duplicate protection
+ *
+ * @returns {Array.< Array.< Array.< int > > >}
+ * The node connectivity arrays that correctly connect all of the nodes
  */
-function expandConnections(connections, foundExpansions) {
-  if (connections.length === 0) {
-    return [];
-  }
-
-  if (foundExpansions.includes(Helper.strJoin(connections))) {
-    return [];
-  }
-  foundExpansions.push(Helper.strJoin(connections));
-
-  let connectionsCopy = [].concat(connections);
-  let expanded = [connectionsCopy];
-  for (let i = 0; i < connections.length; i++) {
-    let spliced = connections.splice(i, 1)[0];
-    let expand = expandConnections(connections, foundExpansions);
-    if (expand.length > 0) {
-      expanded = expanded.concat(expand);
-    }
-    connections.splice(i, 0, spliced);
-  }
-
-  return expanded;
-}
-
 function validateConnections(connections, set, fromNodes, toNodes, validated) {
   if (validated.includes(Helper.strJoin(set))) {
     return;
@@ -437,6 +505,21 @@ function validateConnections(connections, set, fromNodes, toNodes, validated) {
   return validatedConnections;
 }
 
+/**
+ * Sets the `next` connections for each of the `fromNodes`, then validates
+ * that those connections work to connect them to the `toNodes`.
+ *
+ * Also performs additional validation based on fixed rules.
+ *
+ * @param {Array.<int[]>} connections
+ * The connections for each of the `fromNodes`
+ * @param {module:CoreGen~Node[]} fromNodes The nodes being connected from
+ * @param {module:CoreGen~Node[]} toNodes
+ * The nodes being connected to. If `null`, just sets the `fromNode` connections
+ * and returns `true`.
+ *
+ * @returns {boolean} `true` if the connections match up, `false` otherwise
+ */
 function validateNodeConnections(connections, fromNodes, toNodes) {
   // Set the connections
   for (let i = 0; i < fromNodes.length; i++) {

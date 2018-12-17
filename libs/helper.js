@@ -1,4 +1,10 @@
 /**
+ * @module Helper
+ *
+ * @description Contains printing and other helper methods
+ */
+
+/**
  * Generates a comma-separated string with all the array elements in the
  * specified group. Used to keep track of duplicate arrays during an
  * operation as the result of this can be considered a unique key.
@@ -64,7 +70,7 @@ function printGrid(gridToPrint, printGrid) {
     level.nodes.forEach(node => {
       levelString += printGrid ? '| ' : '  ';
       if (node) {
-        levelString += nodeText(node.group, node.element);
+        levelString += nodeText(node.groupId, node.element);
       } else {
         levelString += printGrid ? ' - ' : '   ';
       }
@@ -92,5 +98,46 @@ function nodeText(group, element) {
   return '' + group + '-' + element;
 }
 
+/**
+ * Takes in an array and returns an array of arrays which represents all
+ * possible permutations of the input array's elements, including the input.
+ *
+ * This means that input of [0, 1] becomes:
+```
+[
+  [0], [1], [0, 1]
+]
+```
+ *
+ * @param {int[]} connections The base array to expand
+ * @param {string[]} foundPermutations Duplicate protection
+ *
+ * @returns {Array.<int[]>} The permutations of the input array
+ */
+function arrayPermutations(array, foundPermutations) {
+  if (array.length === 0) {
+    return [];
+  }
+
+  if (foundPermutations.includes(strJoin(array))) {
+    return [];
+  }
+  foundPermutations.push(strJoin(array));
+
+  let arrayCopy = [].concat(array);
+  let permutations = [arrayCopy];
+  for (let i = 0; i < array.length; i++) {
+    let spliced = array.splice(i, 1)[0];
+    let elementPermutations = arrayPermutations(array, foundPermutations);
+    if (elementPermutations.length > 0) {
+      permutations = permutations.concat(elementPermutations);
+    }
+    array.splice(i, 0, spliced);
+  }
+
+  return permutations;
+}
+
 exports.strJoin = strJoin;
 exports.printGrid = printGrid;
+exports.arrayPermutations = arrayPermutations;

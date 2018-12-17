@@ -64,17 +64,15 @@ function createLevel(width, y) {
  * @param {number} x The x coordinate of the node
  * @param {number} y The y coordinate of the node
  * @param {string} element The identifier for the node within a level
- * @param {number} group
- * The group identifier for the node relative to the previous level
  *
  * @returns {module:CoreGen~Node} A new node
  */
-function createNode(x, y, element, group = -1) {
+function createNode(x, y, element) {
   return {
     x: x,
     y: y,
     element: element,
-    group: -1,
+    groupId: -1,
     next: []
   };
 }
