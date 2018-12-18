@@ -25,7 +25,7 @@ const Helper = require('./helper');
  * The number of seconds generation should take. This controls the timer.
  */
 exports.DEFAULT_OPTIONS = {
-  seed: 0,
+  seed: Math.floor(Math.random() * 65536),
   genAlgorithm: Algorithm.GEN_ALGORITHMS.group,
   genOptions: Algorithm.GEN_OPTIONS,
   showGrid: true,
