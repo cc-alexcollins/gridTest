@@ -131,8 +131,8 @@ function nodesFitInGrouping(group, levelNodes) {
     let found = 0;
     fits = false;
 
-    let maxGroupSeperation = inGroup + 1;
-    for (let j = 0; j < maxGroupSeperation && x < width; j++) {
+    let maxSeparation = maxGroupSeparation(inGroup);
+    for (let j = 0; j < maxSeparation && x < width; j++) {
       let node = levelNodes[x++];
       if (node) {
         node.groupId = groupId + 1;
@@ -167,6 +167,10 @@ function nodesFitInGrouping(group, levelNodes) {
   }
 
   return fits;
+}
+
+function maxGroupSeparation(inGroup) {
+  return inGroup + 1;
 }
 
 // Generation Methods
@@ -231,6 +235,20 @@ function generateNodesOnGrid(grid) {
     return minTotal;
   }, 0);
 
+  // Add to total to eliminate unreachable space on the left and right
+  let leftSpace =
+    Math.min.apply(null, prevLevel.nodes.map(n => (n ? n.x : width))) - 1;
+  if (leftSpace > 0) {
+    total += leftSpace;
+  }
+  let rightSpace =
+    width - Math.max.apply(null, prevLevel.nodes.map(n => (n ? n.x : -1))) - 2;
+  if (rightSpace > 0) {
+    total += rightSpace;
+  }
+
+  console.log('pre add total', total);
+
   // This step is done before generating new nodes to ensure we leave
   // space for all groups once we start generating the earlier groups' nodes.
   for (let i = 0; i < groups.length; i++) {
@@ -260,6 +278,11 @@ function generateNodesOnGrid(grid) {
     // minAdded was included before the loop, so don't add it again
     total += numNodes - group.minAdded;
   }
+
+  // Take back out the space that was added earlier
+  total -= Math.max(leftSpace, 0);
+  total -= Math.max(rightSpace, 0);
+  console.log('before any add', total, groups);
 
   // Now that we have all the groups and their min and max node counts, we
   // can start generating nodes for the next level
@@ -320,6 +343,13 @@ function addNodesForGroupToLevel(group, currLevel, nodesLeft) {
     let furthestPrevNode = prevNodes[Math.min(i, prevNodes.length - 1)].x;
     let xMax = Math.min(width - nodesLeft - 1, furthestPrevNode + 1);
 
+    // Clamp xMax based on the separation of nodes in this level
+    if (addedNodes.length > 0) {
+      // The -1 accounts for the first node's placement
+      let maxSeparationX = addedNodes[0].x + maxGroupSeparation(maxNodes) - 1;
+      xMax = Math.min(xMax, maxSeparationX);
+    }
+
     // If there's only one node left, we need extra logic to ensure that
     // all prev nodes can reach at least one node
     if (maxNodes - i === 1) {
@@ -331,6 +361,7 @@ function addNodesForGroupToLevel(group, currLevel, nodesLeft) {
       if (addedNodes.length < minNodes) {
         xMin = xMax;
       } else {
+        console.log('break early', xMin, xMax, addedNodes.length);
         break;
       }
     }
@@ -349,7 +380,7 @@ function addNodesForGroupToLevel(group, currLevel, nodesLeft) {
     }
 
     let x = Random.getRandomElement(leftLeaning);
-    console.log(xMin, xMax, leftLeaning, '|', x);
+    console.log(xMin, xMax, leftLeaning, '-->', x);
 
     let node = CoreGen.createNode(x, y, Constants.elements[i]);
     node.groupId = groupId;

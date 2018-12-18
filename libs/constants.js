@@ -14,7 +14,7 @@ const Helper = require('./helper');
  *
  * @returns {int} The seed
  */
-exports.randSeed = 8;
+exports.randSeed = 1;
 
 /**
  * @constant minNodeGroups
