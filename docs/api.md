@@ -446,7 +446,7 @@ Contains printing and other helper methods
 
 * [Helper](#module_Helper)
     * [~strJoin(array)](#module_Helper..strJoin) ⇒ <code>string</code>
-    * [~printGrid(gridToPrint, printGrid)](#module_Helper..printGrid)
+    * [~printGrid(gridToPrint, printGrid, visibleRows)](#module_Helper..printGrid)
     * [~nodeText(group, element)](#module_Helper..nodeText) ⇒ <code>string</code>
     * [~arrayPermutations(connections, foundPermutations)](#module_Helper..arrayPermutations) ⇒ <code>Array.&lt;Array.&lt;int&gt;&gt;</code>
 
@@ -466,7 +466,7 @@ operation as the result of this can be considered a unique key.
 
 <a name="module_Helper..printGrid"></a>
 
-### Helper~printGrid(gridToPrint, printGrid)
+### Helper~printGrid(gridToPrint, printGrid, visibleRows)
 Prints all of the nodes of all a series of levels to form a grid structure
 
 **Kind**: inner method of [<code>Helper</code>](#module_Helper)  
@@ -475,6 +475,7 @@ Prints all of the nodes of all a series of levels to form a grid structure
 | --- | --- | --- |
 | gridToPrint | <code>any</code> | An array of levels to print |
 | printGrid | <code>boolean</code> | Whether the gridlines should be printed |
+| visibleRows | <code>int</code> | How many rows will show up in the console |
 
 <a name="module_Helper..nodeText"></a>
 
