@@ -27,13 +27,9 @@ const Helper = require('./helper');
 exports.DEFAULT_OPTIONS = {
   seed: 0,
   genAlgorithm: Algorithm.GEN_ALGORITHMS.group,
-  genOptions: {
-    width: 7,
-    height: 25,
-    resetHeights: [7, 6]
-  },
+  genOptions: Algorithm.GEN_OPTIONS,
   showGrid: true,
-  visibleRows: 25,
+  visibleRows: 26,
   time: 5
 };
 
@@ -67,6 +63,9 @@ exports.run = function(options) {
   timer.start(ms);
 
   function tick(timeLeft) {
+    if (timeLeft === 0) {
+      return;
+    }
     console.log('tick | time left', timeLeft);
 
     Algorithm.genNext(grid);
