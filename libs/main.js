@@ -42,6 +42,9 @@ exports.DEFAULT_OPTIONS = {
  * @param {module:Main~Options} options The options to use when generating
  */
 exports.run = function(options) {
+  console.log('Running Generation! | Options:');
+  console.log(options);
+
   Random.init(options.seed);
   Algorithm.setGenAlgorithm(options.genAlgorithm);
   const grid = [];
