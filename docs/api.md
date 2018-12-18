@@ -16,6 +16,9 @@
 <dt><a href="#module_Helper">Helper</a></dt>
 <dd><p>Contains printing and other helper methods</p>
 </dd>
+<dt><a href="#module_Main">Main</a></dt>
+<dd><p>Entry point for grid generation</p>
+</dd>
 <dt><a href="#module_Random">Random</a></dt>
 <dd><p>Helper class for generating random numbers</p>
 </dd>
@@ -96,8 +99,7 @@ generation
 | --- | --- | --- |
 | width | <code>int</code> | The max width of the grid at all levels |
 | height | <code>int</code> | The height of the fully-generated grid |
-| showGrid | <code>boolean</code> | Whether to print out the grid `|`s or not |
-| resetHeights | <code>array</code> | GroupGen only. The places to reset the node groups to allow the paths to reconnect. |
+| resetHeights | <code>array</code> | **GroupGen only.** The places to reset the node groups to allow the paths to reconnect. |
 
 <a name="module_Constants"></a>
 
@@ -106,7 +108,6 @@ Generation constant values
 
 
 * [Constants](#module_Constants)
-    * [~randSeed](#module_Constants..randSeed) ⇒ <code>int</code>
     * [~minNodeGroups](#module_Constants..minNodeGroups) ⇒ <code>int</code>
     * [~maxNodeGroups](#module_Constants..maxNodeGroups) ⇒ <code>int</code>
     * [~minNodesPerGroup](#module_Constants..minNodesPerGroup) ⇒ <code>int</code>
@@ -117,14 +118,6 @@ Generation constant values
     * [~allowedGroupVariations](#module_Constants..allowedGroupVariations) ⇒ <code>Array.&lt;Array.&lt;int&gt;&gt;</code>
     * [~elements](#module_Constants..elements) ⇒ <code>Array.&lt;string&gt;</code>
 
-<a name="module_Constants..randSeed"></a>
-
-### Constants~randSeed ⇒ <code>int</code>
-The seed used for all random number generation
-
-**Kind**: inner constant of [<code>Constants</code>](#module_Constants)  
-**Returns**: <code>int</code> - The seed  
-**See**: [Random](#module_Random)  
 <a name="module_Constants..minNodeGroups"></a>
 
 ### Constants~minNodeGroups ⇒ <code>int</code>
@@ -518,6 +511,45 @@ This means that input of [0, 1] becomes:
 | connections | <code>Array.&lt;int&gt;</code> | The base array to expand |
 | foundPermutations | <code>Array.&lt;string&gt;</code> | Duplicate protection |
 
+<a name="module_Main"></a>
+
+## Main
+Entry point for grid generation
+
+
+* [Main](#module_Main)
+    * _static_
+        * [.run(options)](#module_Main.run)
+    * _inner_
+        * [~Options](#module_Main..Options)
+
+<a name="module_Main.run"></a>
+
+### Main.run(options)
+Generates and displays a grid using the specified input
+
+**Kind**: static method of [<code>Main</code>](#module_Main)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| options | [<code>Options</code>](#module_Main..Options) | The options to use when generating |
+
+<a name="module_Main..Options"></a>
+
+### Main~Options
+Customizable options for the grid generator
+
+**Kind**: inner typedef of [<code>Main</code>](#module_Main)  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| seed | <code>number</code> | The number to see the RNG with |
+| genAlgorithm | [<code>GenAlgorithms</code>](#module_AlgorithmWrapper..GenAlgorithms) | The algorithm to run when generating the paths on the grid |
+| genOptions | [<code>GenOptions</code>](#module_AlgorithmWrapper..GenOptions) | The options that determine the grid output |
+| showGrid | <code>boolean</code> | Whether to print out the grid `|`s or not |
+| time | <code>number</code> | The number of seconds generation should take. This controls the timer. |
+
 <a name="module_Random"></a>
 
 ## Random
@@ -525,17 +557,21 @@ Helper class for generating random numbers
 
 
 * [Random](#module_Random)
-    * [~randSeed](#module_Random..randSeed)
+    * [~init(seed)](#module_Random..init)
     * [~getRandomInt(min, max)](#module_Random..getRandomInt) ⇒ <code>number</code>
     * [~getRandomElement(array)](#module_Random..getRandomElement) ⇒ <code>any</code>
 
-<a name="module_Random..randSeed"></a>
+<a name="module_Random..init"></a>
 
-### Random~randSeed
-The seed used for all random number generation
+### Random~init(seed)
+Initializes the random number generator with the specified seed
 
-**Kind**: inner constant of [<code>Random</code>](#module_Random)  
-**See**: [Constants.randSeed](#module_Constants..randSeed)  
+**Kind**: inner method of [<code>Random</code>](#module_Random)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| seed | <code>number</code> | The number to seed the RNG with |
+
 <a name="module_Random..getRandomInt"></a>
 
 ### Random~getRandomInt(min, max) ⇒ <code>number</code>
