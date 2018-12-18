@@ -26,9 +26,14 @@ function strJoin(array) {
  *
  * @param {any} gridToPrint An array of levels to print
  * @param {boolean} printGrid Whether the gridlines should be printed
+ * @param {int} visibleRows How many rows will show up in the console
  */
-function printGrid(gridToPrint, printGrid) {
-  for (let i = gridToPrint.length - 1; i >= 0; i--) {
+function printGrid(gridToPrint, printGrid, visibleRows) {
+  for (
+    let i = gridToPrint.length - 1;
+    i >= Math.max(0, gridToPrint.length - (visibleRows || 100));
+    i--
+  ) {
     let level = gridToPrint[i];
 
     // Print connections

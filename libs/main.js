@@ -33,6 +33,7 @@ exports.DEFAULT_OPTIONS = {
     resetHeights: [7, 6]
   },
   showGrid: true,
+  visibleRows: 25,
   time: 5
 };
 
@@ -53,12 +54,12 @@ exports.run = function(options) {
 
   console.log('----------');
   console.log('starting grid');
-  Helper.printGrid(grid, options.showGrid);
+  Helper.printGrid(grid, options.showGrid, options.visibleRows);
   console.log('----------');
 
   // Timer execution
   const ms = Math.max(options.time * 1000, 10); // Min tick is 100ms
-  const interval = ms / options.height;
+  const interval = ms / options.genOptions.height;
 
   let timer = new Timer({ interval: interval });
   timer.on('tick', tick);
@@ -67,13 +68,10 @@ exports.run = function(options) {
 
   function tick(timeLeft) {
     console.log('tick | time left', timeLeft);
-    if (timeLeft === 0) {
-      return;
-    }
 
     Algorithm.genNext(grid);
 
-    Helper.printGrid(grid, options.showGrid);
+    Helper.printGrid(grid, options.showGrid, options.visibleRows);
     console.log('----------');
   }
 };
