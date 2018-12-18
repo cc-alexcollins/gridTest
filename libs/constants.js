@@ -7,14 +7,13 @@
 const Helper = require('./helper');
 
 /**
- * @constant randSeed
+ * @ignore
+ * The random number generator for grid generation. Do not use this to get
+ * random numbers, use [Random](#module_Random) instead.
  *
- * @description The seed used for all random number generation
- * @see [Random](#module_Random)
- *
- * @returns {int} The seed
+ * @returns {int} A random number
  */
-exports.randSeed = 1;
+exports.rand = () => 0.5;
 
 /**
  * @constant minNodeGroups

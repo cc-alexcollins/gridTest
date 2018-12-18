@@ -282,7 +282,16 @@ function generateNodesOnGrid(grid) {
   // Take back out the space that was added earlier
   total -= Math.max(leftSpace, 0);
   total -= Math.max(rightSpace, 0);
-  console.log('before any add', total, groups);
+  console.log('groups determined | adding', total);
+  console.log(
+    groups.map(g => {
+      return {
+        groupId: g.groupId,
+        min: g.minAdded,
+        max: g.count
+      };
+    })
+  );
 
   // Now that we have all the groups and their min and max node counts, we
   // can start generating nodes for the next level

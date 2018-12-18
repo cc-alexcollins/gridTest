@@ -16,7 +16,7 @@
  * @property {int} height The height of the fully-generated grid
  * @property {boolean} showGrid Whether to print out the grid `|`s or not
  * @property {array} resetHeights
- * GroupGen only. The places to reset the node groups to allow the paths to
+ * **GroupGen only.** The places to reset the node groups to allow the paths to
  * reconnect.
  */
 exports.GEN_OPTIONS = {

@@ -4,14 +4,16 @@
  * @description Helper class for generating random numbers
  */
 
+const Constants = require('./constants');
+
 /**
- * @constant randSeed
+ * Initializes the random number generator with the specified seed
  *
- * @description The seed used for all random number generation
- * @see [Constants.randSeed](#module_Constants..randSeed)
+ * @param {number} seed The number to seed the RNG with
  */
-const randSeed = require('./constants').randSeed;
-const rand = require('seedrandom')(randSeed);
+function init(seed) {
+  Constants.rand = require('seedrandom')(seed);
+}
 
 /**
  * Gets a random number between `min` (inclusive) and `max` (inclusive)
@@ -23,7 +25,7 @@ const rand = require('seedrandom')(randSeed);
  */
 function getRandomInt(min, max) {
   if (min > max) min = max;
-  return min + Math.floor(rand() * (max - min + 1));
+  return min + Math.floor(Constants.rand() * (max - min + 1));
 }
 
 /**
@@ -39,5 +41,6 @@ function getRandomElement(array) {
   return array[getRandomInt(0, array.length - 1)];
 }
 
+exports.init = init;
 exports.getRandomInt = getRandomInt;
 exports.getRandomElement = getRandomElement;
