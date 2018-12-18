@@ -230,12 +230,13 @@ function generateNodesOnGrid(grid) {
   // This must be done separately from finding the groups because we need to
   // know how many groups we have and their minimum size before we can
   // distribute nodes for the next level.
-  let total = groups.reduce((minTotal, group) => {
+  let minLeft = groups.reduce((minTotal, group) => {
     minTotal += group.minAdded;
     return minTotal;
   }, 0);
 
   // Add to total to eliminate unreachable space on the left and right
+  let total = minLeft;
   let leftSpace =
     Math.min.apply(null, prevLevel.nodes.map(n => (n ? n.x : width))) - 1;
   if (leftSpace > 0) {
@@ -265,15 +266,39 @@ function generateNodesOnGrid(grid) {
       numNodes = Constants.maxNodesPerGroup;
     }
 
-    let maxX = Math.max.apply(null, group.prevNodes.map(n => n.x));
+    // Ensure we aren't trying to cram too many nodes into this group where
+    // we won't be able to place them later
+    let maxX = Math.max.apply(null, group.prevNodes.map(n => n.x)) + 1;
+
+    // This simulates what will be left if we add all nodes to the right side
+    // Basically, what will the next level's max x value be during generation
+    minLeft -= group.minAdded;
+    while (width - maxX - 1 < minLeft) {
+      maxX--;
+    }
+
     while (
       total + numNodes - group.minAdded > Constants.maxNodesPerLevel ||
-      numNodes > width - maxX + 1
+      numNodes > width - maxX
     ) {
       numNodes--;
     }
 
+    // Finally, we can clamp the max nodes to add based on the range we just
+    // calculated based on the group min and the projected max
+    let minX = Math.min.apply(null, group.prevNodes.map(n => n.x)) - 1;
+    while (numNodes > maxX - minX + 1) {
+      numNodes--;
+    }
+
     group.count = numNodes;
+
+    console.log(
+      'tracking total',
+      total,
+      numNodes,
+      total + (numNodes - group.minAdded)
+    );
 
     // minAdded was included before the loop, so don't add it again
     total += numNodes - group.minAdded;
@@ -354,8 +379,7 @@ function addNodesForGroupToLevel(group, currLevel, nodesLeft) {
 
     // Clamp xMax based on the separation of nodes in this level
     if (addedNodes.length > 0) {
-      // The -1 accounts for the first node's placement
-      let maxSeparationX = addedNodes[0].x + maxGroupSeparation(maxNodes) - 1;
+      let maxSeparationX = addedNodes[0].x + maxGroupSeparation(maxNodes);
       xMax = Math.min(xMax, maxSeparationX);
     }
 
@@ -376,7 +400,7 @@ function addNodesForGroupToLevel(group, currLevel, nodesLeft) {
     }
 
     // Lean left --> (min, max) of (1, 3) becomes (1, 1, 1, 2, 2, 3)
-    const leanStrength = [0, 0, 0, 1];
+    const leanStrength = [-1, -1, 0, 0, 0, 0, 1];
     let leftLeaning = [];
     for (let val = xMin; val <= xMax; val++) {
       let delta = Math.max(
