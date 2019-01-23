@@ -64,6 +64,25 @@ exports.run = function(options) {
 
   function tick(timeLeft) {
     if (timeLeft === 0) {
+      /*
+      console.log(
+        grid.reduce((all, level) => {
+          return all.concat(
+            level.nodes.reduce((valid, node) => {
+              if (node) {
+                valid.push({
+                  x: node.x,
+                  y: node.y,
+                  level: level.level,
+                  next: node.next
+                });
+              }
+              return valid;
+            }, [])
+          );
+        }, [])
+      );
+       */
       return;
     }
     console.log('tick | time left', timeLeft);
